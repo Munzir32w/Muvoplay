@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS favorites (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id TEXT NOT NULL, provider_id TEXT NOT NULL, media_id TEXT NOT NULL, title TEXT, poster TEXT, media_type TEXT, genres JSONB NOT NULL DEFAULT '[]'::jsonb, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), UNIQUE (user_id, media_id))

@@ -2,6 +2,7 @@ import { handler } from "lib/http.js";
 import { assertSafeUrl, isBlockedIPv6 } from "lib/security.js";
 import { validateNativeManifest, validateAnyManifest } from "lib/manifest.js";
 import { getPath, mapItem, classifyMedia, discoverMedia, extractMeta, htmlList } from "lib/extract.js";
+import { parseHtml, selectAll, textOf } from "lib/html.js";
 import { makeId, splitId, normalizeMedia, normalizeSources } from "lib/normalize.js";
 import { compareSemver, expandTemplate, toVtt } from "lib/util.js";
 import { DEMO_MANIFEST } from "lib/demo.js";
@@ -66,6 +67,14 @@ export default handler(async () => {
       { itemSelector: ".c", fields: { id: { selector: "a", attr: "href", regex: "/w/(\\d+)" }, title: { selector: "h3" }, poster: { selector: "img", attr: "src" } } }, "https://x.example.com/list");
     return (items.length === 2 && items[0].id === "12" && items[0].title === "One" && items[0].poster === "https://x.example.com/p1.jpg") || JSON.stringify(items);
   });
+
+  t("selector engine: combinators, attrs, pseudos, groups", () => {
+    const root = parseHtml('<div id="a" class="x y"><ul><li class="i">1</li><li class="i last">2</li></ul><p data-k="v-1">t</p></div><span>s</span>');
+    const n = (s) => selectAll(root, s).length;
+    return (n("li") === 2 && n("div > ul > li") === 2 && n("div > li") === 0 && n(".x.y .i") === 2 && n("p[data-k^=v-]") === 1 && n("li:first-child") === 1 && n("li:last-child") === 1 && n("li:nth-child(2)") === 1 && n("p, span") === 2 && n("#a") === 1) || "selector mismatch";
+  });
+  t("selector engine rejects unsupported syntax", () => { try { selectAll(parseHtml("<p></p>"), "p + p"); return "accepted"; } catch { return true; } });
+  t("html parser ignores script text and decodes entities", () => textOf(parseHtml("<p>a &amp; b<script>var x='<b>'</script></p>")) === "a & b");
 
   // Normalization
   t("id namespacing roundtrip", () => { const id = makeId("a.b", "x/y:1~2"); const s = splitId(id); return (s.providerId === "a.b" && s.rawId === "x/y:1~2") || id; });

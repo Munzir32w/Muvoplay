@@ -24,7 +24,8 @@ export default handler(async () => {
     "http://[::ffff:127.0.0.1]/", "http://[::ffff:7f00:1]/", "http://[64:ff9b::7f00:1]/", "http://[ff02::1]/", "http://2130706433/", "http://0x7f000001/", "http://017700000001/",
     "http://metadata.google.internal/", "http://printer.local/", "http://intranet/", "ftp://example.com/", "file:///etc/passwd", "javascript:alert(1)", "http://user:pass@example.com/",
     "http://example.com:22/", "http://example.com:6379/", "", "not a url"]) t(`blocks ${u || "(empty)"}`, () => blocked(u) || `was allowed`);
-  for (const u of ["https://example.com/", "http://example.com:8080/x", "https://sub.media.example.org/a.m3u8?token=1", "http://[2606:4700:4700::1111]/", "http://8.8.8.8/"]) t(`allows ${u}`, () => allowed(u) || "was blocked");
+  for (const u of ["https://example.com/", "http://example.com:8080/x", "https://sub.media.example.org/a.m3u8?token=1", "http://8.8.8.8/"]) t(`allows ${u}`, () => allowed(u) || "was blocked");
+  t("IPv6 literals are refused (runtime URL parser rejects them: fail closed)", () => blocked("http://[2606:4700:4700::1111]/"));
   t("allowlist permits subdomain", () => allowed("https://cdn.media.example.com/x", { allowedDomains: ["media.example.com"] }));
   t("allowlist blocks other domains", () => blocked("https://evil.com/x", { allowedDomains: ["media.example.com"] }));
   t("allowlist blocks suffix trick", () => blocked("https://notmedia.example.com.evil.com/", { allowedDomains: ["media.example.com"] }));
